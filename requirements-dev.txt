@@ -1,0 +1,8 @@
+black==25.9.0
+flake8==7.3.0
+mypy==1.10.0
+pillow==10.2.0
+numpy==2.3.3
+setuptools==68.1.2
+pyinstaller==6.16.0
+rich==13.7.1

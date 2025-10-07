@@ -1,0 +1,5 @@
+GRAVITY = (0,900)
+WIDTH, HEIGHT = 800, 600
+FPS = 60
+
+
