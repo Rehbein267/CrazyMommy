@@ -4,6 +4,7 @@ import pymunk.pygame_util
 
 from settings import WIDTH, HEIGHT, FPS, GRAVITY
 from physics import criar_bola, criar_caixa
+from level import carregar_fundo
 
 def rodar_jogo():
     #Inicialização do Jogo
@@ -11,6 +12,9 @@ def rodar_jogo():
     tela = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Crazy Mommy")  # título da janela
     clock = pygame.time.Clock()
+    # Carrega o fundo do level 1
+    fundo = carregar_fundo("battleback11.png")
+
 
 #Criação do espaço fisico
     espaco = pymunk.Space()
@@ -73,8 +77,9 @@ def rodar_jogo():
 
                     arrastando = False # desativa o modo de arrasto, voltando ao estado normal do jogo
 
-
-        tela.fill((255, 255, 255))        # fundo branco
+        # Dentro do loop principal (antes de desenhar objetos)
+        tela.blit(fundo, (0, 0))
+      
          # desenha o elástico do estilingue
         if arrastando:
             mouse_pos = pygame.mouse.get_pos()

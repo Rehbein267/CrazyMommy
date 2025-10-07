@@ -31,20 +31,37 @@ pip install -r requeriments.txt
 python -m src.main
 ```
 
-## 💡 Créditos
+---
 
-- Arte: Ansimuz --> (licença CC0)
+### 🎵 Créditos de Áudio e Trilha Sonora
 
-- Música: Pixabay / Mixkit (livre de direitos)
+**🎶 Fuga Eletrônica** — composição de [Tecnodono](https://opengameart.org/users/tecnodono)
+Licença: [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
+Disponível em: [OpenGameArt.org](https://opengameart.org/content/fuga-eletronica)
 
-- Código e design: Jane Rehbein🌷
 
-## Tecnologias
+### 🎧 Código e design: **Jane Rehbein** 🌷
+
+---
+
+### 🎨 Arte e Cenários
+
+**🖼️ Fundos 2D** — por [Nidhoggn](https://opengameart.org/users/nidhoggn)
+Licença: **CC0 — Domínio Público**
+Disponível em: [OpenGameArt.org](https://opengameart.org/content/fundos-para-batalha-de-rpg)
+
+---
+
+### ⚙️ Tecnologias
 - Python 3.12
 - Pygame
 - Pymunk
 
-## 🧠 Ideia do jogo
+---
 
-Crazy Mommy é um jogo estilo “Angry Birds com chinelos”, onde a mamãe lança flip-flops contra alvos que se movem, com níveis temáticos e música ambiente.
-Planejado para evoluir com placar, vidas, e modos de dificuldade.
+### 💡 Ideia do Jogo
+*Crazy Mommy* é um jogo estilo **“Angry Birds com chinelos”**,
+onde a mamãe lança **flip-flops** contra alvos que se esquivam.
+A cada nível, o cenário muda, os desafios aumentam e os sons ficam mais intensos! 👠💥
+
+---
