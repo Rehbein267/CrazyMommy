@@ -5,17 +5,6 @@ Cenários dinâmicos, música de fundo e física realista tornam cada fase uma a
 
 ---
 
-## 🧩 Estrutura do Projeto
-
-CrazyMommy/
-├── assets/ → imagens e sons do jogo
-├── src/ → código-fonte principal
-├── venv/ → ambiente virtual (não subir pro Git)
-├── .gitignore → lista de arquivos ignorados pelo Git
-├── requirements.txt → dependências do projeto
-└── README.md → este arquivo
----
-
 ## 🚀 Como Rodar o Jogo
 
 1. Ative o ambiente virtual:
@@ -30,26 +19,56 @@ pip install -r requeriments.txt
 ```
 python -m src.main
 ```
-
 ---
+🎨 Créditos
 
-### 🎵 Créditos de Áudio e Trilha Sonora
+Crazy Mommy © 2025 — Jane Rehbein
 
-**🎶 Fuga Eletrônica** — composição de [Tecnodono](https://opengameart.org/users/tecnodono)
-Licença: [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
-Disponível em: [OpenGameArt.org](https://opengameart.org/content/fuga-eletronica)
+🖌️ Arte e Cenários
 
+Backgrounds — Nidhoggn (OpenGameArt.org
+)
 
-### 🎧 Código e design: **Jane Rehbein** 🌷
+tiny_cat_sprite — Segel (CC0, OpenGameArt.org)
 
----
+plantenemies_battlers_charset — NettySvit (CC0, OpenGameArt.org)
 
-### 🎨 Arte e Cenários
+DG2D_FREE_v1 — LarryIRL (CC0, OpenGameArt.org)
 
-**🖼️ Fundos 2D** — por [Nidhoggn](https://opengameart.org/users/nidhoggn)
-Licença: **CC0 — Domínio Público**
-Disponível em: [OpenGameArt.org](https://opengameart.org/content/fundos-para-batalha-de-rpg)
+Girl1.png — jcrown41 (CC0, OpenGameArt.org)
 
+Char001.png — Hyptosis (CC0, OpenGameArt.org)
+
+footgear-flare_20201217 — AntumDeluge (CC0, OpenGameArt.org)
+
+🎵 Trilha Sonora
+
+“Shaded Woods” — rebrie18 (Freesound.org
+) — Licença CC BY 3.0
+
+“Boss Battle #1 V1.wav” — nene (CC0, OpenGameArt.org)
+
+🔊 Efeitos Sonoros
+
+Huge Explosion — SamsterBirdies (CC0, Freesound.org)
+
+Laughing (male) — dastudiospr (CC0, Freesound.org)
+
+Hit / Ouch — zeteny_zpx (CC0, Freesound.org)
+
+Oh No — reison55 (CC0, Freesound.org)
+
+BaDoink — BaDoink (CC0, Freesound.org)
+
+Lasso Rope Spin — zapsplat.com (CC0)
+
+Female Laugh (short) — thedialogueproject (CC0, Freesound.org)
+
+Uh Oh — Ant103010 (CC0, Freesound.org)
+
+Awesomeness — mrpoly (CC0, OpenGameArt.org)
+
+Winneris.ogg — congusbongus (CC0, OpenGameArt.org)
 ---
 
 ### ⚙️ Tecnologias
