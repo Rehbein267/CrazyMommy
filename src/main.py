@@ -1,4 +1,4 @@
-from game import rodar_jogo
+from menu import Menu
 
 if __name__ == "__main__":
-    rodar_jogo()
+    Menu().run()

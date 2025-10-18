@@ -1,6 +1,6 @@
 # 🎮 Crazy Mommy – Flip Flop Fury 🩴
 
-Um jogo divertido feito em **Python + Pygame + Pymunk**, onde a mamãe lança chinelos em alvos que tentam fugir!
+Um jogo divertido feito em **Python + Pygame + Pymunk**, onde a mamãe lança chinelos em alvo que tentam fugir!
 Cenários dinâmicos, música de fundo e física realista tornam cada fase uma aventura hilária 🌻!
 
 ---
