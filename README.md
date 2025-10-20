@@ -1,62 +1,56 @@
-# 🎮 Crazy Mommy – Flip Flop Fury 🩴
+🎮 Crazy Mommy — Primeira Versão (Protótipo Experimental)
 
-Um jogo divertido feito em **Python + Pygame + Pymunk**, onde a mamãe lança chinelos em alvo que tentam fugir!
-Cenários dinâmicos, música de fundo e física realista tornam cada fase uma aventura hilária 🌻!
+🩴 Protótipo inicial do jogo Crazy Mommy, desenvolvido em Python + Pygame.
+Esta é a primeira tentativa, com mecânicas mais complexas (IA, obstáculos).
+Devido ao prazo e limitações de tempo, esta versão contém bugs e comportamentos instáveis, mas representa a base criativa original do projeto.
 
----
+💡 Objetivo desta versão
 
-## 🚀 Como Rodar o Jogo
+Esta versão foi criada como prova de conceito — um teste para:
 
-1. Ative o ambiente virtual:
-```
-source venv/bin/activate
-```
-2. Instale as dependências:
-```
-pip install -r requeriments.txt
-```
-3. Rode o jogo:
-```
-python -m src.main
-```
----
-🎨 ** Créditos**
+Implementar movimentos automáticos (IA) nos inimigos.
 
-Crazy Mommy © 2025 — Jane Rehbein
+Testar colisões entre múltiplos objetos (obstáculos, chinelos e personagens).
 
-🖌️ ** Arte e Cenários**
+Explorar a lógica de fases progressivas e efeitos de física mais realistas.
 
-- *"Backgrounds"* — Nidhoggn (*CCO*-OpenGameArt.org)
+⚙️ Status do projeto
 
-- *"tiny_cat_sprite"* — Segel (*CC0*, OpenGameArt.org)
+🚧 Em desenvolvimento / experimental
 
-- *"plantenemies_battlers_charset"* — NettySvit (*CC0*, OpenGameArt.org)
+Pode apresentar falhas durante a execução.
 
-- *"DG2D_FREE_v1"* — LarryIRL (*CC0*, OpenGameArt.org)
+Será refatorada e integrada às próximas versões estáveis.
 
-- *"Girl1.png"* — jcrown41 (*CC0*, OpenGameArt.org)
+🤝 Contribuições
 
-- *"Char001.png"* — Hyptosis (*CC0*, OpenGameArt.org)
+👩‍💻 Se você deseja ajudar a corrigir bugs, otimizar o código ou implementar ideias, é muito bem-vindo(a)!
+Basta abrir uma issue ou pull request neste repositório.
 
-- *"footgear-flare_20201217"* — AntumDeluge (*CC0*, OpenGameArt.org)
+⚠️ Atenção:
+Este projeto é protegido por direitos autorais.
+O uso, cópia ou redistribuição sem permissão da autora não é permitido.
+Contribuições são aceitas apenas com autoria mantida e reconhecida.
 
+🧩 Estrutura (simplificada)
+CrazyMommy-PrimeiraVersao/
+│
+├── assets/
+│   ├── images/
+│   └── sounds/
+│
+├── src/
+│   ├── game_action.py
+│   ├── level2.py
+│   ├── characters.py
+│   └── ...
+│
+└── README.md
 
-🎵 **Trilha Sonora**
-- *"Shaded Woods"* — rebrie18 (Freesound.org, **CC BY 3.0**)
-- *"Boss Battle #1 V1.wav"* — nene (OpenGameArt.org, **CC0**)
+📜 Direitos Autorais
 
-🔊 **Efeitos Sonoros**
-- *Grande Explosão* — SamsterBirdies (Freesound.org, **CC0**)
-- *Hit / Ai* — zeteny_zpx (Freesound.org, **CC0**)
-- *Risada Feminina (curta)* — thedialogueproject (Freesound.org, **CC0**)
-- *Winneris.ogg* — congusbongus (OpenGameArt.org, **CC0**)
+© 2025 Jane Rehbein Matias
+Centro Universitário Uninter — Curso de Análise e Desenvolvimento de Sistemas
 
-⚙️ **Tecnologias**
-- Python 3.12  
-- Pygame  
-- Pymunk  
-
-💡 **Ideia do Jogo**
-*Crazy Mommy* é um jogo estilo **“Angry Birds com chinelos”**,  
-onde a mamãe lança *flip-flops* contra os alvos que fogem!  
-Cenários mudam, a música acelera e o caos aumenta 👠💥
+🔒 Código original protegido contra cópia e uso não autorizado.
+Uso permitido apenas para fins acadêmicos e colaborativos com autorização da autora.
