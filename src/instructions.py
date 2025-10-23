@@ -1,11 +1,11 @@
 import pygame
+from utils import resource_path
 from settings import WIDTH, HEIGHT
 
 def show_instructions(screen):
     """Mostra instruções de como jogar"""
-
     try:
-        bg = pygame.image.load("assets/images/background/battleback1.png").convert()
+        bg = pygame.image.load(resource_path("assets/images/background/battleback1.png")).convert()
         bg = pygame.transform.scale(bg, (WIDTH, HEIGHT))
     except Exception as e:
         print(f"Error image not found: {e}")
@@ -23,7 +23,7 @@ def show_instructions(screen):
 
     text_lines = [
         f"Use as {seta_direita} {seta_esquerda} para mover a Mãe.",
-        f"Use {seta_cima} para pular os obstáculos.",
+        f"Use {seta_cima} para pular",
         "Pressione ESPAÇO para lançar chinelos.",
         "Pressione ESC ou ENTER para voltar ao menu.",
         "",
