@@ -1,141 +1,270 @@
-import pygame
-import random
-from settings import WIDTH, HEIGHT, FPS
-from characters import Mother, Target
+import pygame, random
+from settings import (
+    WIDTH, HEIGHT, FPS, GROUND_Y,
+    HUD_BAR_W, HUD_BAR_H, WHITE, GRAY, GREEN, YELLOW, RED, DEFAULT_FONT
+)
+from characters import Mother
 from flipflop import FlipFlop
-from credits import show_credits
+from explosion import Explosion
+from utils import resource_path
 
-# ============================================================
-class Obstacle(pygame.sprite.Sprite):
-    """Cria obstáculos aleatórios alinhados ao chão"""
-    def __init__(self, x):
+class JumpingTarget(pygame.sprite.Sprite):
+    def __init__(self, start_pos, max_lives=20):
         super().__init__()
-        obstacle_images = [
-            ("assets/images/obstacles/plant_enemy_01.png", (70, 50)),
-            ("assets/images/obstacles/plant_enemy_02.png", (70, 50)),
-            ("assets/images/obstacles/plant_enemy_07.png", (70, 50)),
-            ("assets/images/obstacles/goat.png", (80, 60)),
-            ("assets/images/obstacles/plant_enemy_08.png", (80, 60)),
-        ]
-        path, size = random.choice(obstacle_images)
-        try:
-            img = pygame.image.load(path).convert_alpha()
-            self.image = pygame.transform.smoothscale(img, size)
-        except Exception:
-            self.image = pygame.Surface(size)
-            self.image.fill((200, 60, 60))
-        ground_y = HEIGHT - 120
-        self.rect = self.image.get_rect(midbottom=(x, ground_y))
 
-    def update(self, speed):
-        self.rect.x -= speed
-        if self.rect.right < 0:
-            self.kill()
+        filenames = ["target_00.png", "target_01.png", "target_02.png"]
+        self.frames = []
+        for name in filenames:
+            img = pygame.image.load(resource_path(f"assets/images/alvo/{name}")).convert_alpha()
+            img = pygame.transform.smoothscale(img, (80, 100))
+            self.frames.append(img)
 
-# ============================================================
+        self.frame_index = 0
+        self.image = self.frames[0]
+        self.rect = self.image.get_rect(midbottom=start_pos)
+
+        self.vy = 0.0
+        self.gravity = 1.0
+        self.on_ground = True
+        self.ground_y = GROUND_Y
+
+        self.lives = max_lives
+        self.max_lives = max_lives
+        self.alive = True
+
+        self.min_jump = -28
+        self.max_jump = -20
+        self.jump_cooldown = (600, 1200)
+        self.next_jump_at = pygame.time.get_ticks() + random.randint(*self.jump_cooldown)
+
+        self.anim_interval_ms = 60
+        self.last_anim = pygame.time.get_ticks()
+
+        self.blink_until = 0
+        self.last_hit_time = 0
+
+    def take_damage(self):
+        if not self.alive:
+            return
+        now = pygame.time.get_ticks()
+        if now - self.last_hit_time < 150:
+            return
+        self.last_hit_time = now
+
+        self.lives = max(0, self.lives - 1)
+        self.blink_until = now + 150
+        if self.lives == 0:
+            self.alive = False
+
+    def _maybe_jump(self):
+        """Pula em alturas aleatórias, apenas quando está no chão, respeitando cooldown."""
+        if not self.on_ground or not self.alive:
+            return
+        now = pygame.time.get_ticks()
+        if now >= self.next_jump_at:
+            self.vy = random.uniform(self.min_jump, self.max_jump)
+            self.on_ground = False
+            self.next_jump_at = now + random.randint(*self.jump_cooldown)
+
+    def _apply_gravity(self):
+        self.vy += self.gravity
+        self.rect.y += int(self.vy)
+        if self.rect.bottom >= self.ground_y:
+            self.rect.bottom = self.ground_y
+            self.vy = 0.0
+            self.on_ground = True
+
+    def _animate(self):
+        now = pygame.time.get_ticks()
+        if now - self.last_anim >= self.anim_interval_ms:
+            self.last_anim = now
+            self.frame_index = (self.frame_index + 1) % len(self.frames)
+            self.image = self.frames[self.frame_index]
+
+        if pygame.time.get_ticks() < self.blink_until:
+            self.image.set_alpha(150)
+        else:
+            self.image.set_alpha(255)
+
+    def update(self):
+        if not self.alive:
+            self.vy = 0.0
+        else:
+            self._maybe_jump()
+            self._apply_gravity()
+
+        self._animate()
+
 class GameLevel2:
-    """Fase 2 — obstáculos, barra de vida, cronômetro e créditos"""
     def __init__(self):
         pygame.init()
         pygame.mixer.init()
+        pygame.mixer.set_num_channels(16)
+        self.explosion_channel = pygame.mixer.Channel(15)
 
-        self.font = pygame.font.SysFont("Lucida Sans Typewriter", 28)
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         pygame.display.set_caption("Crazy Mommy — Level 2")
         self.clock = pygame.time.Clock()
+        self.font = pygame.font.SysFont(DEFAULT_FONT, 28)
 
         try:
-            pygame.mixer.music.load("assets/sounds/sombatalha.wav")
+            pygame.mixer.music.load(resource_path("assets/sounds/sombatalha.wav"))
             pygame.mixer.music.play(-1)
-        except:
-            print("Música de fundo não carregada.")
+        except Exception as e:
+            print(f"Erro ao carregar música de fundo: {e}")
 
-        try:
-            self.sound_hit = pygame.mixer.Sound("assets/sounds/target_ouch.wav")
-            self.sound_hit.set_volume(0.6)
-        except:
-            self.sound_hit = None
+        def _sfx(path):
+            try:
+                return pygame.mixer.Sound(resource_path(path))
+            except Exception as e:
+                print(f"Erro ao carregar som: {path} ({e})")
+                return None
 
-        raw_frames = [
-            "assets/images/background/battleback2.png",
-            "assets/images/background/battleback2-1.png",
-            "assets/images/background/battleback2-2.png",
-            "assets/images/background/battleback2-3.png"
-        ]
+        self.sfx_throw = _sfx("assets/sounds/FlipFlop_launch.wav")
+        self.sfx_hit   = _sfx("assets/sounds/target_ouch.wav")
+        self.sfx_expl  = _sfx("assets/sounds/explosion.flac")
+        self.snd_expl  = self.sfx_expl
 
-        self.bg_frames = [pygame.transform.smoothscale(pygame.image.load(p).convert(), (WIDTH, HEIGHT)) for p in raw_frames]
-        self.bg_frames_flipped = [pygame.transform.flip(img, True, False) for img in self.bg_frames]
+        if self.sfx_expl:
+            self.sfx_expl.set_volume(0.8)
+            self.explosion_channel.play(self.sfx_expl)
+            self.explosion_channel.stop()
 
-        self.bg_index = 0
-        self.bg_next_index = 1
-        self.bg_alpha = 0
-        self.bg_transition_speed = 2
-        self.bg_speed = 1.8
+        self.bg_back = pygame.image.load(resource_path("assets/images/background/battleback2.png")).convert()
+        self.bg_back = pygame.transform.smoothscale(self.bg_back, (WIDTH, HEIGHT))
+        self.bg_back_flip = pygame.transform.flip(self.bg_back, True, False)
+
+        self.bg_front = pygame.image.load(resource_path("assets/images/background/battleback2-1.png")).convert_alpha()
+        self.bg_front = pygame.transform.smoothscale(self.bg_front, (WIDTH, HEIGHT))
+        self.bg_front_flip = pygame.transform.flip(self.bg_front, True, False)
+
         self.bg_x = 0
-        self.last_switch = pygame.time.get_ticks()
-        self.switch_interval = 6000
+        self.bg_speed = 2
+
 
         self.all_sprites = pygame.sprite.Group()
-        self.obstacles = pygame.sprite.Group()
-        self.flipflops = pygame.sprite.Group()
+        self.projectiles = pygame.sprite.Group()
 
-        self.ground_y = HEIGHT - 120
-        self.mother = Mother((180, self.ground_y))
-        self.target = Target((WIDTH - 500, self.ground_y), (400, WIDTH - 50), self.mother)
-        self.mother.target = self.target
-        self.target.obstacles = self.obstacles
+        self.mother = Mother((180, GROUND_Y))
+        self.target = JumpingTarget((WIDTH - 220, GROUND_Y), max_lives=20)
+
         self.all_sprites.add(self.mother, self.target)
 
+        self.mother_lives = getattr(self.mother, "lives", 5)
+        self.max_target_lives = self.target.max_lives
+        self.max_time_ms = 15_000
+        self.start_ms = pygame.time.get_ticks()
+
         self.running = True
-        self.target_health = 50
-        self.max_target_health = 50
-        self.mother_health = 5
-        self.gravity = 0.8
-        self.jump_force = -22
-        self.mother_velocity_y = 0
-        self.mother_can_jump = True
+        self.ended = False
 
-        self.obstacle_timer = 0
-        self.last_hit_ms = 0
-        self.collision_cooldown_ms = 1000
-
-        self.max_time_ms = 30_000
-        self.start_time_ms = pygame.time.get_ticks()
-
-    # -----------------------------------------------------------
-    def draw_parallax_background(self):
-        """Fundo com transição suave e espelhamento"""
-        now = pygame.time.get_ticks()
-        if now - self.last_switch > self.switch_interval:
-            self.last_switch = now
-            self.bg_next_index = (self.bg_index + 1) % len(self.bg_frames)
-            self.bg_alpha = 0
-
+    def _draw_bg(self):
         self.bg_x -= self.bg_speed
         if self.bg_x <= -WIDTH:
             self.bg_x = 0
 
-        current_bg = self.bg_frames[self.bg_index]
-        next_bg = self.bg_frames[self.bg_next_index]
+        self.screen.blit(self.bg_back, (self.bg_x, 0))
+        self.screen.blit(self.bg_back_flip, (self.bg_x + WIDTH, 0))
 
-        self.screen.blit(current_bg, (self.bg_x, 0))
-        self.screen.blit(pygame.transform.flip(current_bg, True, False), (self.bg_x + WIDTH, 0))
+        self.screen.blit(self.bg_front, (self.bg_x * 1.5, 0))
+        self.screen.blit(self.bg_front_flip, (self.bg_x * 1.5 + WIDTH, 0))
 
-        if self.bg_alpha < 255:
-            blended = next_bg.copy()
-            blended.set_alpha(self.bg_alpha)
-            self.screen.blit(blended, (self.bg_x, 0))
-            self.bg_alpha += self.bg_transition_speed
-        else:
-            self.bg_index = self.bg_next_index
+    def _draw_hud(self, remaining_ms):
+        ratio = max(0, min(self.target.lives / self.max_target_lives, 1))
+        pygame.draw.rect(self.screen, GRAY,
+                         (WIDTH - 20 - HUD_BAR_W, 20, HUD_BAR_W, HUD_BAR_H), border_radius=6)
+        fill = int(HUD_BAR_W * ratio)
+        color = GREEN if ratio > 0.6 else (YELLOW if ratio > 0.3 else RED)
+        pygame.draw.rect(self.screen, color,
+                         (WIDTH - 20 - HUD_BAR_W, 20, fill, HUD_BAR_H), border_radius=6)
+        self.screen.blit(self.font.render(
+            f"Target: {self.target.lives}/{self.max_target_lives}", True, WHITE),
+            (WIDTH - 20 - HUD_BAR_W - 180, 18))
 
-        overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
-        overlay.fill((160, 200, 255, 45))
+        mratio = max(0, min(self.mother_lives / 5, 1))
+        pygame.draw.rect(self.screen, GRAY, (20, 20, 150, HUD_BAR_H), border_radius=6)
+        pygame.draw.rect(self.screen, (52, 152, 219) if mratio > 0.5 else RED,
+                         (20, 20, int(150 * mratio), HUD_BAR_H), border_radius=6)
+        self.screen.blit(self.font.render(f"Mom: {self.mother_lives}/5", True, WHITE), (180, 18))
+
+        sec = max(0, remaining_ms // 1000)
+        self.screen.blit(self.font.render(f"Time: {sec:02d}s", True, WHITE), (20, 48))
+
+    def _throw_flipflop(self):
+        f = FlipFlop(self.mother.rect.center)
+        self.projectiles.add(f)
+        self.all_sprites.add(f)
+        if self.sfx_throw:
+            self.sfx_throw.play()
+
+    def _check_hits(self):
+        hits = pygame.sprite.spritecollide(self.target, self.projectiles, dokill=True)
+        if hits and self.target.alive:
+            self.target.take_damage()
+            if self.sfx_hit:
+                self.sfx_hit.play()
+            if self.target.lives <= 0:
+                self._win()
+
+        if self.mother.rect.right > self.target.rect.left - 12:
+            self.mother.rect.right = self.target.rect.left - 12
+
+    def _freeze_overlay_msg(self, text, color):
+        self.bg_speed = 0
+        self._draw_bg()
+        self.all_sprites.draw(self.screen)
+
+        overlay = pygame.Surface((WIDTH, HEIGHT))
+        overlay.set_alpha(100)
+        overlay.fill((0, 0, 0))
         self.screen.blit(overlay, (0, 0))
 
-    # -----------------------------------------------------------
+        surf = pygame.font.SysFont(DEFAULT_FONT, 52).render(text, True, color)
+        rect = surf.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+        self.screen.blit(surf, rect)
+        pygame.display.flip()
+        pygame.time.wait(1500)
+
+    def _win(self):
+        if self.ended:
+            return
+        self.ended = True
+
+        pygame.time.wait(80)
+        if self.sfx_expl:
+            self.explosion_channel.play(self.sfx_expl)
+
+        boom = Explosion(self.target.rect.center, self.screen, self.sfx_expl)
+        start = pygame.time.get_ticks()
+        while pygame.time.get_ticks() - start < 1000:
+            self._draw_bg()
+            self.mother.update_animation(True)
+            self.screen.blit(self.mother.image, self.mother.rect)
+            boom.update()
+            boom.draw(self.screen)
+            boom.draw_flash()
+            pygame.display.flip()
+            self.clock.tick(FPS)
+
+        self._freeze_overlay_msg("WINNER!", GREEN)
+        pygame.mixer.music.stop()
+        from credits import show_credits
+        show_credits(self.screen)
+        import menu
+        menu.Menu().run()
+        self.running = False
+
+    def _lose(self):
+        if self.ended:
+            return
+        self.ended = True
+        self._freeze_overlay_msg("YOU LOST! TRY AGAIN", RED)
+        pygame.mixer.music.stop()
+        import menu
+        menu.Menu().run()
+        self.running = False
+
     def run(self):
-        """Loop principal da fase"""
         while self.running:
             for e in pygame.event.get():
                 if e.type == pygame.QUIT:
@@ -143,150 +272,31 @@ class GameLevel2:
                 elif e.type == pygame.KEYDOWN:
                     if e.key == pygame.K_ESCAPE:
                         self.running = False
-                        pygame.display.quit()
-                        from menu import Menu
-                        Menu().run()
+                        pygame.mixer.music.stop()
+                        import menu
+                        menu.Menu().run()
                     elif e.key == pygame.K_SPACE:
-                        self.throw_flipflop()
-                    elif e.key == pygame.K_UP and self.mother_can_jump:
-                        self.mother_velocity_y = self.jump_force
-                        self.mother_can_jump = False
+                        self._throw_flipflop()
+                    elif e.key == pygame.K_UP and getattr(self.mother, "on_ground", True):
+                        self.mother.vy = getattr(self.mother, "jump_force", -25)
+                        self.mother.on_ground = False
 
             keys = pygame.key.get_pressed()
-            self.mother.move(keys)
-
-            if self.mother.rect.right > self.target.rect.left - 120:
-                self.mother.rect.right = self.target.rect.left - 120
-
-            self.mother_velocity_y += self.gravity
-            self.mother.rect.y += self.mother_velocity_y
-            if self.mother.rect.bottom >= HEIGHT - 120:
-                self.mother.rect.bottom = HEIGHT - 120
-                self.mother_velocity_y = 0
-                self.mother_can_jump = True
-
+            self.mother.update(keys)
             self.target.update()
-            self.obstacles.update(self.bg_speed)
-            self.flipflops.update()
+            self.projectiles.update()
 
-            now = pygame.time.get_ticks()
-            if now - self.obstacle_timer > random.randint(4500, 7000):
-                x = WIDTH + random.randint(350, 650)
-                obstacle = Obstacle(x)
-                self.obstacles.add(obstacle)
-                self.all_sprites.add(obstacle)
-                self.obstacle_timer = now
-
-            self.check_collisions()
-
-            remaining_ms = self.max_time_ms - (pygame.time.get_ticks() - self.start_time_ms)
-            if remaining_ms <= 0:
-                print("Tempo esgotado! A mãe perdeu!")
-                self.mother_health = 0
-                self.end_level(victory=False)
+            elapsed = pygame.time.get_ticks() - self.start_ms
+            remaining = max(0, self.max_time_ms - elapsed)
+            if remaining == 0:
+                self._lose()
                 break
 
-            if self.target_health <= 0:
-                print("Alvo derrotado! Subindo créditos...")
-                self.end_level(victory=True)
-                break
-
-            self.draw_parallax_background()
+            self._check_hits()
+            self._draw_bg()
             self.all_sprites.draw(self.screen)
-            self.draw_hud(remaining_ms)
+            self._draw_hud(remaining)
             pygame.display.flip()
             self.clock.tick(FPS)
 
         pygame.quit()
-
-    def draw_hud(self, remaining_ms):
-        """Desenha as barras de vida e cronômetro"""
-        ratio = self.target_health / self.max_target_health
-        color = (46, 204, 113) if ratio > 0.6 else (241, 196, 15) if ratio > 0.3 else (231, 76, 60)
-
-        bar_x, bar_y, bar_w, bar_h = WIDTH - 200, 20, 150, 16
-        pygame.draw.rect(self.screen, (60, 60, 60), (bar_x, bar_y, bar_w, bar_h), border_radius=6)
-        fill_w = int(bar_w * ratio)
-        pygame.draw.rect(self.screen, color, (bar_x, bar_y, fill_w, bar_h), border_radius=6)
-
-        txt_lives = self.font.render(f"Alvo: {self.target_health}/{self.max_target_health}", True, (255, 255, 255))
-        self.screen.blit(txt_lives, (bar_x - 95, bar_y - 2))
-
-        mom_ratio = self.mother_health / 5
-        mom_color = (52, 152, 219) if mom_ratio > 0.5 else (231, 76, 60)
-        pygame.draw.rect(self.screen, (60, 60, 60), (20, 20, 150, 16), border_radius=6)
-        fill_mom = int(150 * mom_ratio)
-        pygame.draw.rect(self.screen, mom_color, (20, 20, fill_mom, 16), border_radius=6)
-
-        txt_mom = self.font.render(f"Mãe: {self.mother_health}/5", True, (255, 255, 255))
-        self.screen.blit(txt_mom, (180, 18))
-
-        seconds = max(0, remaining_ms // 1000)
-        txt_time = self.font.render(f"Tempo: {seconds:02d}s", True, (255, 255, 255))
-        self.screen.blit(txt_time, (20, 45))
-    # -----------------------------------------------------------
-    def check_collisions(self):
-        """Colisões da mãe e dos chinelos"""
-        hits_target = pygame.sprite.spritecollide(self.target, self.flipflops, dokill=True)
-        if hits_target:
-            self.target_health -= 1
-            if self.sound_hit:
-                self.sound_hit.play()
-
-        now = pygame.time.get_ticks()
-        mother_on_ground = (self.mother.rect.bottom >= self.ground_y - 2)
-
-        if mother_on_ground and (now - self.last_hit_ms) >= self.collision_cooldown_ms:
-            for ob in self.obstacles:
-                if self.mother.rect.colliderect(ob.rect):
-                    self.mother_health -= 1
-                    self.last_hit_ms = now
-                    if self.sound_hit:
-                        self.sound_hit.play()
-
-                    if self.mother_health <= 0:
-                        self.game_over()
-                    break
-
-    # -----------------------------------------------------------
-    def end_level(self, victory=True):
-        """Mensagem final + créditos"""
-        fonte = pygame.font.Font(None, 72)
-        msg = "WINNER!" if victory else "GAME OVER"
-        cor = (46, 204, 113) if victory else (231, 76, 60)
-
-        texto = fonte.render(msg, True, cor)
-        rect = texto.get_rect(center=(WIDTH // 2, HEIGHT // 2))
-        self.screen.fill((0, 0, 0))
-        self.screen.blit(texto, rect)
-        pygame.display.flip()
-        pygame.time.wait(2000)
-
-        pygame.mixer.music.stop()
-        if victory:
-            show_credits(self.screen)
-        else:
-            from menu import Menu
-            Menu().run()
-
-        self.running = False
-
-    def game_over(self):
-        """Tela de Game Over"""
-        fonte = pygame.font.Font(None, 72)
-        texto = fonte.render("GAME OVER!", True, (231, 76, 60))
-        rect = texto.get_rect(center=(WIDTH // 2, HEIGHT // 2))
-        self.screen.fill((0, 0, 0))
-        self.screen.blit(texto, rect)
-        pygame.display.flip()
-        pygame.mixer.music.stop()
-        pygame.time.wait(2500)
-
-        from menu import Menu
-        Menu().run()
-
-    # -----------------------------------------------------------
-    def throw_flipflop(self):
-        flip = FlipFlop(self.mother.rect.center, self.mother.direction)
-        self.all_sprites.add(flip)
-        self.flipflops.add(flip)

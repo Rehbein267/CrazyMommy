@@ -1,15 +1,25 @@
 import pygame
-from settings import WIDTH, HEIGHT
+from utils import resource_path
+from settings import WIDTH, HEIGHT, FPS
 
 def show_credits(screen):
     """Exibe os créditos finais rolando na tela sem sobrepor o título"""
+    clock = pygame.time.Clock()
+    font_text = pygame.font.SysFont("Lucida Sans Typewriter", 30)
 
-    font_title = pygame.font.SysFont("Lucida Sans Typewriter", 48)
-    font_text = pygame.font.SysFont("Lucida Sans Typewriter", 28)
+    try:
+        bg = pygame.image.load(resource_path("assets/images/background/MenuBg.png")).convert()
+        bg = pygame.transform.smoothscale(bg, (WIDTH, HEIGHT))
+    except:
+        bg = pygame.Surface((WIDTH, HEIGHT))
+        bg.fill((10, 10, 30))
 
-    title = font_title.render("Créditos — Crazy Mommy", True, (255, 215, 0))
-    title_y = 80
-    title_rect = title.get_rect(center=(WIDTH // 2, title_y + title.get_height() // 2))
+    title_font = pygame.font.SysFont("Lucida Sans Typewriter", 48, bold=True)
+    title_text = title_font.render("Créditos — Crazy Mommy", True, (255, 255, 120))
+    title_shadow = title_font.render("Créditos — Crazy Mommy", True, (60, 60, 20))
+    title_rect = title_text.get_rect(center=(WIDTH // 2, 80))
+    screen.blit(title_shadow, (title_rect.x + 2, title_rect.y + 2))
+    screen.blit(title_text, title_rect)
 
     credits = [
         "Crazy Mommy © 2025 — Jane Rehbein",
@@ -36,8 +46,8 @@ def show_credits(screen):
         "Oh No — reison55 (CC0, Freesound.org)",
         "BaDoink — BaDoink (CC0, Freesound.org)",
         "Lasso Rope Spin — zapsplat.com (CC0, Freesound.org)",
-        "Female Laugh (short) — thedialogueproject (CC0, Freesound.org)",
-        "Uh Oh — Ant103010 (CC0, Freesound.org)",
+        "oh yes!.wav —Reitanna(CC0, Freesound.org)",
+        "oh.wav — Reitanna (CC0, Freesound.org)",
         "awesomeness — mrpoly (CC0, OpenGameArt.org)",
         "winneris.ogg — congusbongus (CC0, OpenGameArt.org)",
         "",
@@ -48,14 +58,13 @@ def show_credits(screen):
     ]
 
     scroll_y = HEIGHT
-    scroll_speed = 1
-    safe_top = title_rect.bottom + 28
+    scroll_speed = 1.5
+    safe_top = title_rect.bottom + 40
 
     running = True
-    clock = pygame.time.Clock()
 
     try:
-        pygame.mixer.music.load("assets/sounds/menutheme.wav")
+        pygame.mixer.music.load(resource_path("assets/sounds/menutheme.wav"))
         pygame.mixer.music.play(-1)
     except:
         print("Música de créditos não encontrada.")
@@ -67,14 +76,18 @@ def show_credits(screen):
             elif event.type == pygame.KEYDOWN and event.key in [pygame.K_ESCAPE, pygame.K_RETURN]:
                 running = False
 
-        screen.fill((10, 10, 30))
-        screen.blit(title, (WIDTH // 2 - title.get_width() // 2, title_y))
+        screen.blit(bg,(0, 0))
+        overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+        overlay.set_alpha(50)
+        overlay.fill((160, 200, 120, 70))
+        screen.blit(overlay, (0, 0))
+        screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, 80))
 
         y = scroll_y
         for line in credits:
-            text = font_text.render(line, True, (200, 200, 200))
+            text = font_text.render(line, True, (255, 255, 255))
             text_rect = text.get_rect(center=(WIDTH // 2, y))
-            if text_rect.bottom > safe_top:  # não desenha sobre o título
+            if text_rect.bottom > safe_top:
                 screen.blit(text, text_rect)
             y += 40
 
@@ -88,5 +101,4 @@ def show_credits(screen):
 
     pygame.mixer.music.stop()
 
-    from menu import Menu
-    Menu().run()
+    return
