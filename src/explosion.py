@@ -1,72 +1,78 @@
 import pygame
 import random
+from settings import WIDTH, HEIGHT
+
+class Explosion(pygame.sprite.Group):
+    """Animação de explosão com partículas, flash e som."""
+
+    def __init__(self, center, screen, sfx_expl=None):
+        super().__init__()
+        self.center = center
+        self.screen = screen
+        self.sfx_expl = sfx_expl
+
+        if self.sfx_expl:
+            self.sfx_expl.set_volume(0.8)
+            self.sfx_expl.play()
+
+        for _ in range(30):
+            self.add(Particle(center))
+
+        self.flash_surface = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+        self.flash_surface.fill((255, 255, 255, 200))
+        self.flash_timer = pygame.time.get_ticks()
+
+    def update(self):
+        super().update()
+        for p in list(self):
+            if not p.alive:
+                self.remove(p)
+
+    def draw(self, surface):
+        for p in self:
+            surface.blit(p.image, p.rect)
+
+    def draw_flash(self):
+        now = pygame.time.get_ticks()
+        elapsed = now - self.flash_timer
+        if elapsed < 180:
+            alpha = max(0, 200 - (elapsed * 2))
+            self.flash_surface.set_alpha(alpha)
+            self.screen.blit(self.flash_surface, (0, 0))
 
 
 class Particle(pygame.sprite.Sprite):
-    """Pequena partícula colorida"""
-
-    def __init__(self, pos):
+    def __init__(self, center):
         super().__init__()
-
-        self.image = pygame.Surface((4, 4), pygame.SRCALPHA)
+        size = random.randint(6, 12)
+        self.image = pygame.Surface((size, size), pygame.SRCALPHA)
         color = random.choice([
-            (255, 255, 255),   # branco
-            (255, 255, 120),   # amrelo
-            (255, 200, 50),    # ouro
-            (255, 100, 150),   # rosa
-            (150, 200, 255)    # azul fraco
+            (255, 255, 80),
+            (255, 140, 0),
+            (255, 60, 60),
+            (255, 255, 255),
         ])
-        pygame.draw.circle(self.image, color, (2, 2), 2)
-        self.rect = self.image.get_rect(center=pos)
+        pygame.draw.circle(self.image, color, (size // 2, size // 2), size // 2)
+        self.rect = self.image.get_rect(center=center)
 
-        self.vel_x = random.uniform(-4, 4)
-        self.vel_y = random.uniform(-6, -2)
-        self.life = random.randint(20, 40)
-        self.gravity = 0.3
+        self.vx = random.uniform(-5, 5)
+        self.vy = random.uniform(-6, 2)
+        self.gravity = 0.25
+        self.life = random.randint(500, 1000)
+        self.spawn_time = pygame.time.get_ticks()
+        self.alive = True
 
-    # ----------------------------------------------------------
     def update(self):
-        """Gravidade e movimento da particula"""
-        self.vel_y += self.gravity
-        self.rect.x += self.vel_x
-        self.rect.y += self.vel_y
-        self.life -= 1
-        if self.life <= 0:
-            self.kill()
+        now = pygame.time.get_ticks()
+        elapsed = now - self.spawn_time
+        if elapsed > self.life:
+            self.alive = False
+            return
 
+        self.vy += self.gravity
+        self.rect.x += int(self.vx)
+        self.rect.y += int(self.vy)
 
-# =========================================================
-class Explosion(pygame.sprite.Group):
-    """Explosão de partículas e efeito de flash brilhante"""
-
-    def __init__(self, pos, screen, explosion_sound=("assets/sounds/explosion.flac")):
-        super().__init__()
-        self.screen = screen
-
-        for _ in range(30):
-            self.add(Particle(pos))
-
-        self.flash_timer = 8
-        self.sound = explosion_sound
-        if self.sound:
-            self.sound.play()
-            self.fade_timer = pygame.time.get_ticks() + 200
-
-    # ----------------------------------------------------------
-    def draw_flash(self, pos):
-        """Desenha um flash rápido e brilhante (efeito de câmera)"""
-        if self.flash_timer > 0:
-            overlay = pygame.Surface(self.screen.get_size(), pygame.SRCALPHA)
-            pygame.draw.circle(overlay, (255, 255, 180, 120), pos, 200)
-            self.screen.blit(overlay, (0, 0))
-            self.flash_timer -= 1
-
-    # ----------------------------------------------------------
-    def update(self):
-        """Atualiza partículas e aplica fade-out no som"""
-        super().update()
-
-        if hasattr(self, "fade_timer") and self.sound:
-            if self.fade_timer is not None and pygame.time.get_ticks() > self.fade_timer:
-                self.sound.fadeout(500)
-                self.fade_timer = None
+        fade_ratio = 1 - (elapsed / self.life)
+        alpha = int(255 * fade_ratio)
+        self.image.set_alpha(alpha)
