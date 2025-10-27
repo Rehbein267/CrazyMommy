@@ -7,7 +7,7 @@ class FlipFlop(pygame.sprite.Sprite):
     """Chinelo giratório lançado pela mãe."""
     def __init__(self, pos, direction=1):
         super().__init__()
-        
+
         self.base_image = pygame.image.load(resource_path("assets/images/flipflop1.png")).convert_alpha()
         self.base_image = pygame.transform.smoothscale(self.base_image, (50, 40))
         self.image = self.base_image
@@ -17,10 +17,9 @@ class FlipFlop(pygame.sprite.Sprite):
         self.angle = 0
         self.spin_speed = 22
 
-        # Física do movimento
-        self.vel_x = 14 * direction   # velocidade horizontal
-        self.vel_y = -12              # impulso inicial para cima
-        self.gravity = 0.7            # aceleração da gravidade
+        self.vel_x = 14 * direction
+        self.vel_y = -12
+        self.gravity = 0.7
 
         try:
             self.throw_sound = pygame.mixer.Sound(resource_path("assets/sounds/flipflop_launch.wav"))

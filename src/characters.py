@@ -5,7 +5,6 @@ from utils import resource_path
 
 import pygame
 
-
 class Mother(pygame.sprite.Sprite):
     def __init__(self, pos):
         super().__init__()
@@ -71,6 +70,8 @@ class Mother(pygame.sprite.Sprite):
         moving = self.move(keys)
         self.apply_gravity()
         self.update_animation(moving)
+        if self.rect.centerx > WIDTH // 2:
+            self.rect.centerx = WIDTH // 2
 
 class Target(pygame.sprite.Sprite):
     """Corre dentro de um intervalo e morre com explosão."""
@@ -155,3 +156,86 @@ class Target(pygame.sprite.Sprite):
             self.last_anim = now
             self.frame_index = (self.frame_index + 1) % len(self.frames)
             self.image = self.frames[self.frame_index]
+
+
+class JumpingTarget(pygame.sprite.Sprite):
+    """Versão que pula de tempos em tempos."""
+    def __init__(self, start_pos, max_lives=20):
+        super().__init__()
+        filenames = ["target_00.png", "target_01.png", "target_02.png"]
+        self.frames = []
+        for name in filenames:
+            img = pygame.image.load(resource_path(f"assets/images/alvo/{name}")).convert_alpha()
+            img = pygame.transform.smoothscale(img, (80, 100))
+            self.frames.append(img)
+
+        self.frame_index = 0
+        self.image = self.frames[0]
+        self.rect = self.image.get_rect(midbottom=start_pos)
+        self.mask = pygame.mask.from_surface(self.image)  # ✅ ativa colisão pixel-perfect
+
+        self.vy = 0.0
+        self.gravity = 1.0
+        self.on_ground = True
+        self.ground_y = HEIGHT - 120
+        self.lives = max_lives
+        self.max_lives = max_lives
+        self.alive = True
+        self.min_jump = -28
+        self.max_jump = -20
+        self.jump_cooldown = (600, 1200)
+        self.next_jump_at = pygame.time.get_ticks() + random.randint(*self.jump_cooldown)
+        self.anim_interval_ms = 60
+        self.last_anim = pygame.time.get_ticks()
+        self.blink_until = 0
+        self.last_hit_time = 0
+
+    def take_damage(self):
+        if not self.alive:
+            return
+        now = pygame.time.get_ticks()
+        if now - self.last_hit_time < 150:
+            return
+        self.last_hit_time = now
+        self.lives = max(0, self.lives - 1)
+        self.blink_until = now + 150
+        if self.lives == 0:
+            self.alive = False
+
+    def _maybe_jump(self):
+        if not self.on_ground or not self.alive:
+            return
+        now = pygame.time.get_ticks()
+        if now >= self.next_jump_at:
+            self.vy = random.uniform(self.min_jump, self.max_jump)
+            self.on_ground = False
+            self.next_jump_at = now + random.randint(*self.jump_cooldown)
+
+    def _apply_gravity(self):
+        self.vy += self.gravity
+        self.rect.y += int(self.vy)
+        if self.rect.bottom >= self.ground_y:
+            self.rect.bottom = self.ground_y
+            self.vy = 0.0
+            self.on_ground = True
+
+    def _animate(self):
+        now = pygame.time.get_ticks()
+        if now - self.last_anim >= self.anim_interval_ms:
+            self.last_anim = now
+            self.frame_index = (self.frame_index + 1) % len(self.frames)
+            self.image = self.frames[self.frame_index]
+            self.mask = pygame.mask.from_surface(self.image)
+        if pygame.time.get_ticks() < self.blink_until:
+            self.image.set_alpha(150)
+        else:
+            self.image.set_alpha(255)
+
+    def update(self):
+        if not self.alive:
+            self.vy = 0.0
+        else:
+            self._maybe_jump()
+            self._apply_gravity()
+        self._animate()
+
