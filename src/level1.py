@@ -1,12 +1,16 @@
 import pygame
-from settings import WIDTH, HEIGHT, FPS
-from characters import Mother, Target
-from flipflop import FlipFlop
-from explosion import Explosion
-from utils import resource_path
+from src.settings import (
+    WIDTH, HEIGHT, FPS, GROUND_Y,
+    HUD_BAR_W, HUD_BAR_H, WHITE, GRAY, GREEN, RED, DEFAULT_FONT
+)
+from src.characters import Mother, Target
+from src.flipflop import FlipFlop
+from src.explosion import Explosion
+from src.utils import resource_path
 
+class GameLevel1:
+    """Classe principal da Fase 1."""
 
-class Game:
     def __init__(self):
         pygame.init()
         pygame.mixer.init()
@@ -16,19 +20,18 @@ class Game:
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         pygame.display.set_caption("Crazy Mommy — Level 1")
         self.clock = pygame.time.Clock()
+        self.font = pygame.font.SysFont(DEFAULT_FONT, 28)
 
-        pygame.mixer.music.load(resource_path("assets/sounds/sombatalha.wav"))
-        pygame.mixer.music.play(-1)
+        try:
+            pygame.mixer.music.load(resource_path("assets/sounds/sombatalha.wav"))
+            pygame.mixer.music.set_volume(0.5)
+            pygame.mixer.music.play(-1)
+        except Exception as e:
+            print(f"[Aviso] Erro ao carregar música: {e}")
 
-        self.sfx_throw = self._load_sfx(resource_path("assets/sounds/FlipFlop_launch.wav"))
-        self.sfx_ouch  = self._load_sfx(resource_path("assets/sounds/target_ouch.wav"))
-        self.sfx_expl  = self._load_sfx(resource_path("assets/sounds/explosion.flac"))
-        self.snd_expl  = self.sfx_expl
-
-        if self.sfx_expl:
-            self.sfx_expl.set_volume(0.8)
-            self.explosion_channel.play(self.sfx_expl)
-            self.explosion_channel.stop()
+        self.sfx_throw = self._load_sfx("assets/sounds/FlipFlop_launch.wav")
+        self.sfx_hit = self._load_sfx("assets/sounds/target_ouch.wav")
+        self.sfx_expl = self._load_sfx("assets/sounds/explosion.flac")
 
         self.bg_back = pygame.image.load(resource_path("assets/images/background/battleback4.png")).convert()
         self.bg_back = pygame.transform.smoothscale(self.bg_back, (WIDTH, HEIGHT))
@@ -44,62 +47,66 @@ class Game:
         self.all_sprites = pygame.sprite.Group()
         self.projectiles = pygame.sprite.Group()
 
-        ground_y = HEIGHT - 120
-        self.mother = Mother((150, ground_y))
-        self.target = Target((WIDTH - 280, ground_y), (350, WIDTH - 40), self.mother)
+        self.mother = Mother((150, GROUND_Y))
+        self.target = Target((WIDTH - 280, GROUND_Y), (350, WIDTH - 40), self.mother)
         self.all_sprites.add(self.mother, self.target)
 
-        self.running = True
-        self.target.alive = True
         self.target_lives = 12
         self.max_target_lives = 12
-        self.time_ms = 15_000
+        self.max_time_ms = 15_000
         self.start_ms = pygame.time.get_ticks()
 
+        self.running = True
+
     def _load_sfx(self, path):
+        """Carrega efeito sonoro com tratamento de erro."""
         try:
-            return pygame.mixer.Sound(path)
-        except:
+            return pygame.mixer.Sound(resource_path(path))
+        except Exception:
+            print(f"[Aviso] Falha ao carregar som: {path}")
             return None
 
     def _draw_bg(self):
-
+        """Desenha fundo com efeito parallax alternado (flip)."""
         self.bg_x -= self.bg_speed
         if self.bg_x <= -WIDTH:
             self.bg_x = 0
 
         self.screen.blit(self.bg_back, (self.bg_x, 0))
         self.screen.blit(self.bg_back_flip, (self.bg_x + WIDTH, 0))
-
         self.screen.blit(self.bg_front, (self.bg_x * 1.5, 0))
         self.screen.blit(self.bg_front_flip, (self.bg_x * 1.5 + WIDTH, 0))
 
     def _draw_hud(self, remaining_ms):
-        bar_w = WIDTH // 3
-        bar_h = 16
-        x = 20
-        y = 20
+        """Desenha HUD com barra de vida e tempo."""
+        bar_w = HUD_BAR_W
+        bar_h = HUD_BAR_H
+        x, y = 20, 30
 
-        pygame.draw.rect(self.screen, (60, 60, 60), (x, y, bar_w, bar_h), border_radius=6)
+        pygame.draw.rect(self.screen, GRAY, (x, y, bar_w, bar_h), border_radius=6)
+
         ratio = max(0, min(self.target_lives / self.max_target_lives, 1))
         fill = int(bar_w * ratio)
-        pygame.draw.rect(self.screen, (46, 204, 113), (x, y, fill, bar_h), border_radius=6)
+        color = GREEN if ratio > 0.3 else RED
+        pygame.draw.rect(self.screen, color, (x, y, fill, bar_h), border_radius=6)
 
-        font = pygame.font.Font(None, 28)
-        self.screen.blit(font.render(
-            f"Lives: {self.target_lives}/{self.max_target_lives}", True, (255, 255, 255)), (x + bar_w + 10, y - 2))
+        text = self.font.render(f"Target: {self.target_lives}/{self.max_target_lives}", True, WHITE)
+        self.screen.blit(text, (x + 10, y - 28))
 
         secs = max(0, remaining_ms // 1000)
-        self.screen.blit(font.render(f"Time: {secs:02d}s", True, (255, 255, 255)), (20, 44))
+        txt_time = self.font.render(f"Time: {secs:02d}s", True, WHITE)
+        self.screen.blit(txt_time, (WIDTH - 140, 20))
 
     def _throw_flipflop(self):
+        """Cria e arremessa o chinelo."""
         f = FlipFlop(self.mother.rect.center, +1)
         self.projectiles.add(f)
         self.all_sprites.add(f)
         if self.sfx_throw:
             self.sfx_throw.play()
 
-    def _collisions(self):
+    def _check_collisions(self):
+        """Detecta colisões entre chinelo e alvo."""
         if self.mother.rect.right > self.target.rect.left - 100:
             self.mother.rect.right = self.target.rect.left - 100
 
@@ -107,16 +114,16 @@ class Game:
         if hits and self.target.alive:
             self.target.take_damage()
             self.target_lives = max(0, self.target_lives - 1)
-            if self.sfx_ouch:
-                self.sfx_ouch.play()
+            if self.sfx_hit:
+                self.sfx_hit.play()
 
             if self.target_lives <= 0:
                 self.target.alive = False
                 self._explode_target()
                 self._end(victory=True)
-                return
 
     def _explode_target(self):
+        """Efeito de explosão ao eliminar o alvo."""
         pygame.time.wait(80)
         if self.sfx_expl:
             self.explosion_channel.play(self.sfx_expl)
@@ -136,6 +143,7 @@ class Game:
             self.clock.tick(FPS)
 
     def _end(self, victory: bool):
+        """Exibe mensagem final e muda de fase."""
         self.bg_speed = 0
         self._draw_bg()
         self.all_sprites.draw(self.screen)
@@ -145,11 +153,10 @@ class Game:
         overlay.fill((0, 0, 0))
         self.screen.blit(overlay, (0, 0))
 
-        msg = "WINNER! LEVEL 2" if victory else "YOU LOST! TRY AGAIN"
-        color = (46, 204, 113) if victory else (231, 76, 60)
+        msg = "WINNER! Level 2" if victory else "YOU LOST! TRY AGAIN"
+        color = GREEN if victory else RED
 
-        font = pygame.font.Font(None, 64)
-        surf = font.render(msg, True, color)
+        surf = self.font.render(msg, True, color)
         rect = surf.get_rect(center=(WIDTH // 2, HEIGHT // 2))
         self.screen.blit(surf, rect)
         pygame.display.flip()
@@ -157,18 +164,17 @@ class Game:
         pygame.mixer.music.stop()
 
         if victory:
-            import level2
-            level2.GameLevel2().run()
+            from src.level2 import GameLevel2
+            GameLevel2().run()
         else:
-            import menu
-            menu.Menu().run()
+            from src.menu import Menu
+            Menu().run()
 
         self.running = False
 
-
     def run(self):
+        """Loop principal da fase 1."""
         while self.running:
-            keys = pygame.key.get_pressed()
             for e in pygame.event.get():
                 if e.type == pygame.QUIT:
                     self.running = False
@@ -178,15 +184,16 @@ class Game:
                     elif e.key == pygame.K_SPACE:
                         self._throw_flipflop()
 
+            keys = pygame.key.get_pressed()
             self.mother.update(keys)
             self.target.update()
             self.projectiles.update()
 
-            remaining = self.time_ms - (pygame.time.get_ticks() - self.start_ms)
+            remaining = self.max_time_ms - (pygame.time.get_ticks() - self.start_ms)
             if remaining <= 0:
                 self._end(victory=False)
 
-            self._collisions()
+            self._check_collisions()
 
             self._draw_bg()
             self.all_sprites.draw(self.screen)

@@ -2,15 +2,15 @@ import pygame
 import os
 import sys
 from settings import WIDTH, HEIGHT
-from game_action import Game
+from level1 import GameLevel1
 from credits import show_credits
 from instructions import show_instructions
 from utils import resource_path
 
+
 class Menu:
     def __init__(self):
         pygame.init()
-
         self.font = pygame.font.SysFont("Lucida Sans Typewriter", 40)
         self.window = pygame.display.set_mode((WIDTH, HEIGHT))
         pygame.display.set_caption("Crazy Mommy — Menu")
@@ -25,12 +25,11 @@ class Menu:
 
     def run(self):
         """Loop principal do menu com som e navegação"""
-
         try:
             pygame.mixer.music.load(resource_path("assets/sounds/menutheme.wav"))
             pygame.mixer.music.play(-1)
         except Exception as e:
-            print(f" Música do menu não encontrada: {e}")
+            print(f"Música do menu não encontrada: {e}")
 
         try:
             sound_move = pygame.mixer.Sound(resource_path("assets/sounds/cursor-move.wav"))
@@ -65,7 +64,7 @@ class Menu:
                             pygame.mixer.music.stop()
                             self.window.fill((0, 0, 0))
                             pygame.display.flip()
-                            Game().run()
+                            GameLevel1().run()
                             pygame.mixer.music.play(-1)
 
                         elif selected == 1:
@@ -94,7 +93,6 @@ class Menu:
         pygame.mixer.music.stop()
         pygame.quit()
 
-    # -----------------------------------------------------------------
     def menu_text(self, text, pos, color=(255, 255, 255)):
         """Renderiza texto centralizado na tela"""
         surface = self.font.render(text, True, color)
