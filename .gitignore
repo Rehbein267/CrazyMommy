@@ -1,25 +1,36 @@
-# Ambientes virtuais
+# 🧠 Python / Pygame
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.log
+*.tmp
+*.bak
+*.swp
+
+# 🎮 Pygame builds
+build/
+dist/
+*.spec
+
+# 🪄 Virtualenv
+venv/
+.env/
 .venv/
 env/
 
-# Cache do Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
+# 🎨 Assets temporários
+assets/images/BG 2.0*/
+assets/images/fundo/*
+assets/images/teste/
+*.psd
+*.xcf
+*.zip
+*.rar
+*.tar.gz
 
-# Logs
-*.log
-
-# Configurações do VS Code
-.vscode/
-
-# Arquivos temporários do sistema
+# 💻 Sistema
 .DS_Store
 Thumbs.db
-
-# Builds/Executáveis (caso use PyInstaller)
-dist/
-build/
-*.spec
-venv/
+.idea/
+.vscode/
