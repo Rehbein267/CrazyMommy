@@ -72,22 +72,22 @@ CrazyMommy/
 
 - Boas práticas de OOP, modularização e uso de assets externos
 
-## 📊 Status do Projeto
+### 📊 Status do Projeto
 
 - ✅ Versão estável e finalizada
 - 💻 Código otimizado e organizado em módulos
 - 📦 Disponível para uso acadêmico e demonstrações
 
-## 🤝 Contribuições
+### 🤝 Contribuições
 
 Contribuições são bem-vindas!
 Se desejar sugerir melhorias, abra uma issue ou envie um pull request com sua proposta.
 
-## ⚠️ Direitos Autorais
+### ⚠️ Direitos Autorais
 
 © 2025 Jane Rehbein Matias
 Centro Universitário Uninter — Curso de Análise e Desenvolvimento de Sistemas
 
-## 🧩 Uso autorizado apenas para fins acadêmicos e colaborativos.
+### 🧩 Uso autorizado apenas para fins acadêmicos e colaborativos.
 Proibida a cópia ou redistribuição sem autorização da autora.
 Créditos devem ser mantidos e reconhecidos em qualquer derivação do projeto.
