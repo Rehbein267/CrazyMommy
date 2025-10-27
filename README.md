@@ -1,56 +1,93 @@
-🎮 Crazy Mommy — Primeira Versão (Protótipo Experimental)
+# 🎮 Crazy Mommy — Versão Final (Projeto de Graduação)
 
-🩴 Protótipo inicial do jogo Crazy Mommy, desenvolvido em Python + Pygame.
-Esta é a primeira tentativa, com mecânicas mais complexas (IA, obstáculos).
-Devido ao prazo e limitações de tempo, esta versão contém bugs e comportamentos instáveis, mas representa a base criativa original do projeto.
+🧠 **Crazy Mommy** é um jogo 2D desenvolvido em **Python + Pygame**, criado como trabalho da disciplina Linguagem de Programação Aplicada no curso de **Análise e Desenvolvimento de Sistemas** no Centro Universitário **Uninter**.
 
-💡 Objetivo desta versão
+Nesta versão final, o jogo apresenta três fases completas, com movimentação fluida, colisões, sons, HUD dinâmico e transições entre níveis.
+Foi desenvolvido de forma modular e com boas práticas de organização de código, separando lógica de jogo, interface e assets.
 
-Esta versão foi criada como prova de conceito — um teste para:
+---
 
-Implementar movimentos automáticos (IA) nos inimigos.
+## 💡 Objetivo do Projeto
 
-Testar colisões entre múltiplos objetos (obstáculos, chinelos e personagens).
+O projeto teve como propósito:
 
-Explorar a lógica de fases progressivas e efeitos de física mais realistas.
+- Implementar um **jogo interativo e funcional**, utilizando a linguagem Python e a biblioteca Pygame.
+- Explorar **conceitos de orientação a objetos**, eventos, colisões e física básica.
+- Aplicar **padrões de design**, modularização e reutilização de código.
+- Demonstrar **autonomia técnica e criativa** no desenvolvimento de software.
 
-⚙️ Status do projeto
+---
 
-🚧 Em desenvolvimento / experimental
+## 🧩 Estrutura do Projeto (Simplificada)
 
-Pode apresentar falhas durante a execução.
-
-Será refatorada e integrada às próximas versões estáveis.
-
-🤝 Contribuições
-
-👩‍💻 Se você deseja ajudar a corrigir bugs, otimizar o código ou implementar ideias, é muito bem-vindo(a)!
-Basta abrir uma issue ou pull request neste repositório.
-
-⚠️ Atenção:
-Este projeto é protegido por direitos autorais.
-O uso, cópia ou redistribuição sem permissão da autora não é permitido.
-Contribuições são aceitas apenas com autoria mantida e reconhecida.
-
-🧩 Estrutura (simplificada)
-CrazyMommy-PrimeiraVersao/
+CrazyMommy/
 │
 ├── assets/
-│   ├── images/
-│   └── sounds/
+│ ├── images/ # Cenários, personagens, sprites, HUD
+│ └── sounds/ # Efeitos sonoros e trilhas
 │
 ├── src/
-│   ├── game_action.py
-│   ├── level2.py
-│   ├── characters.py
-│   └── ...
+│ ├── main.py # Arquivo principal — inicia o jogo
+│ ├── menu.py # Menu inicial
+│ ├── level1.py # Fase 1 — introdução
+│ ├── level2.py # Fase 2 — desafio intermediário
+│ ├── level3.py # Fase 3 — obstáculos e IA
+│ ├── characters.py # Classes da Mãe e inimigos
+│ ├── flipflop.py # Mecânica do chinelo (arma)
+│ ├── hud.py # Sistema de barras de vida e tempo
+│ ├── explosion.py # Efeitos de vitória e colisão
+│ └── settings.py # Configurações globais do jogo
 │
 └── README.md
 
-📜 Direitos Autorais
+---
+
+## 🕹️ Como jogar
+
+1. Instale as dependências:
+   ```bash
+   pip install pygame
+	```
+2. Execute o jogo:
+```
+    python3 src/main.py
+```
+3. Controles:
+
+- ← / → mover
+
+- ↑ pular
+
+- Espaço lançar o chinelo 🩴
+
+- ESC para sair
+
+## ⚙️ Tecnologias utilizadas
+
+- Python 3.12
+
+- Pygame 2.6
+
+- VS Code / Linux
+
+- Boas práticas de OOP, modularização e uso de assets externos
+
+## 📊 Status do Projeto
+
+- ✅ Versão estável e finalizada
+- 💻 Código otimizado e organizado em módulos
+- 📦 Disponível para uso acadêmico e demonstrações
+
+## 🤝 Contribuições
+
+Contribuições são bem-vindas!
+Se desejar sugerir melhorias, abra uma issue ou envie um pull request com sua proposta.
+
+# ⚠️ Direitos Autorais
 
 © 2025 Jane Rehbein Matias
 Centro Universitário Uninter — Curso de Análise e Desenvolvimento de Sistemas
 
-🔒 Código original protegido contra cópia e uso não autorizado.
-Uso permitido apenas para fins acadêmicos e colaborativos com autorização da autora.
+# 🧩 Uso autorizado apenas para fins acadêmicos e colaborativos.
+Proibida a cópia ou redistribuição sem autorização da autora.
+Créditos devem ser mantidos e reconhecidos em qualquer derivação do projeto.
